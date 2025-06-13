@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>福祉タクシー運賃計算</title>
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY&libraries=places"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1Y1geobXRlk517MSj_b3dEl9o1wZjKSs&libraries=places"></script>
   <style>
     body { font-family: sans-serif; padding: 10px; }
     input, select, button { width: 100%; padding: 8px; margin: 5px 0; }
@@ -62,7 +62,7 @@
         return;
       }
 
-      const apiKey = "YOUR_GOOGLE_API_KEY";
+      const apiKey = "AIzaSyD1Y1geobXRlk517MSj_b3dEl9o1wZjKSs";
       const waypointsParam = waypoints.map(w => encodeURIComponent(w)).join("|");
       const url = `https://api.allorigins.win/get?url=${encodeURIComponent(
         'https://maps.googleapis.com/maps/api/directions/json?origin=' +
