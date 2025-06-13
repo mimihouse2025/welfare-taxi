@@ -3,12 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <title>福祉タクシー運賃計算</title>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1Y1geobXRlk517MSj_b3dEl9o1wZjKSs&libraries=places"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY&libraries=places"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
     input, select, button { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
     label { display: block; margin-top: 10px; font-weight: bold; }
-    .checkbox-group label { display: block; font-weight: normal; margin-left: 10px; }
+    .checkbox-group { margin: 15px 0; }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .checkbox-item input {
+      margin-right: 10px;
+    }
     #result, #details, #breakdown { margin-top: 20px; font-weight: bold; }
     #breakdown ul { padding-left: 20px; }
   </style>
@@ -43,9 +51,18 @@
   </select>
 
   <div class="checkbox-group">
-    <label><input type="checkbox" id="stairsSupport"> 階段昇降介助（2名体制）</label>
-    <label><input type="checkbox" id="wheelchair"> 貸し出し車椅子（1台まで無料）</label>
-    <label><input type="checkbox" id="stretcher"> ストレッチャー使用</label>
+    <div class="checkbox-item">
+      <input type="checkbox" id="stairsSupport">
+      <label for="stairsSupport">階段昇降介助（2名体制）</label>
+    </div>
+    <div class="checkbox-item">
+      <input type="checkbox" id="wheelchair">
+      <label for="wheelchair">貸し出し車椅子（1台まで無料）</label>
+    </div>
+    <div class="checkbox-item">
+      <input type="checkbox" id="stretcher">
+      <label for="stretcher">ストレッチャー使用</label>
+    </div>
   </div>
 
   <button onclick="calculateFare()">運賃を計算する</button>
@@ -138,7 +155,6 @@
           breakdown.push(`ストレッチャー使用料：¥4000`);
         }
 
-        // 車椅子は無料のため金額加算なし、ただし表示は可能
         if (document.getElementById("wheelchair").checked) {
           breakdown.push(`貸し出し車椅子：¥0`);
         }
