@@ -43,6 +43,7 @@
   </label>
 
   <button onclick="calculateFare()">運賃を計算する</button>
+
   <div id="result"></div>
   <div id="details"></div>
   <div id="breakdown"></div>
@@ -52,101 +53,91 @@
       const origin = document.getElementById("origin").value;
       const destination = document.getElementById("destination").value;
       const timeStr = document.getElementById("rideTime").value;
-
       const waypoints = ["waypoint1", "waypoint2", "waypoint3"]
         .map(id => document.getElementById(id).value.trim())
-        .filter(v => v);
+        .filter(v => v)
+        .map(address => ({ location: address, stopover: true }));
 
       if (!origin || !destination || !timeStr) {
         document.getElementById("result").innerHTML = "出発地・目的地・時刻をすべて入力してください。";
         return;
       }
 
-      const apiKey = "AIzaSyD1Y1geobXRlk517MSj_b3dEl9o1wZjKSs";
-      const waypointsParam = waypoints.map(w => encodeURIComponent(w)).join("|");
-      const url = `https://api.allorigins.win/get?url=${encodeURIComponent(
-        'https://maps.googleapis.com/maps/api/directions/json?origin=' +
-        encodeURIComponent(origin) +
-        '&destination=' + encodeURIComponent(destination) +
-        '&waypoints=' + waypointsParam +
-        '&key=' + apiKey
-      )}`;
+      const service = new google.maps.DirectionsService();
+      service.route({
+        origin: origin,
+        destination: destination,
+        waypoints: waypoints,
+        travelMode: google.maps.TravelMode.DRIVING
+      }, function (response, status) {
+        if (status !== 'OK') {
+          document.getElementById("result").innerHTML = "ルート取得失敗：" + status;
+          return;
+        }
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          const json = JSON.parse(data.contents);
-          if (json.status !== "OK") {
-            document.getElementById("result").innerHTML = "ルート取得失敗。";
-            return;
-          }
-
-          let totalMeters = 0;
-          json.routes[0].legs.forEach(leg => {
-            totalMeters += leg.distance.value;
-          });
-
-          const distanceKm = totalMeters / 1000;
-          const [hour, minute] = timeStr.split(":").map(Number);
-          const isNight = (hour >= 22 || hour < 5);
-
-          let breakdown = [];
-          let fare = 341;
-          breakdown.push(`距離基本運賃：¥341`);
-          if (distanceKm > 1) {
-            const addFare = Math.ceil(distanceKm - 1) * 330;
-            fare += addFare;
-            breakdown.push(`追加距離：¥${addFare}`);
-          }
-          if (isNight) {
-            fare = Math.round(fare * 1.2);
-            breakdown.push(`深夜割増：×1.2`);
-          }
-
-          fare += 400;
-          breakdown.push(`予約料：¥400`);
-
-          fare += 1100;
-          breakdown.push(`乗降介助：¥1100`);
-
-          const indoor = parseInt(document.getElementById("indoorAssistants").value) || 0;
-          const indoorFare = indoor * 1100;
-          fare += indoorFare;
-          breakdown.push(`室内移動付乗降介助：¥${indoorFare}`);
-
-          const hours = parseInt(document.getElementById("assistantHours").value) || 1;
-          const nurses = parseInt(document.getElementById("nurseAssistants").value) || 0;
-          const helpers = parseInt(document.getElementById("helperAssistants").value) || 0;
-          let assistFare = nurses * 6000 * hours + helpers * 2500 * hours;
-          if (isNight) assistFare = Math.round(assistFare * 1.2);
-          fare += assistFare;
-          breakdown.push(`看護師・ヘルパー付添い：¥${assistFare}`);
-
-          const hospitalMin = parseInt(document.getElementById("hospitalSupport").value);
-          const hospitalFare = 1600 * (hospitalMin / 30);
-          fare += hospitalFare;
-          breakdown.push(`病院内付き添い：¥${hospitalFare}`);
-
-          const stairs = document.querySelector('input[name="stairsSupport"]:checked').value;
-          if (stairs === "yes") {
-            const stairFare = 2200 + 2 * (helpers > 0 ? 2500 * hours : 0);
-            fare += stairFare;
-            breakdown.push(`階段昇降介助（2名体制）：¥${stairFare}`);
-          }
-
-          const stretcher = document.querySelector('input[name="stretcher"]:checked').value;
-          if (stretcher === "yes") {
-            fare += 4000;
-            breakdown.push(`ストレッチャー使用料：¥4000`);
-          }
-
-          document.getElementById("result").innerHTML = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
-          document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km`;
-          document.getElementById("breakdown").innerHTML = `<h4>内訳</h4><ul><li>${breakdown.join('</li><li>')}</li></ul>`;
-        })
-        .catch(() => {
-          document.getElementById("result").innerHTML = "接続エラー。";
+        let totalMeters = 0;
+        response.routes[0].legs.forEach(leg => {
+          totalMeters += leg.distance.value;
         });
+
+        const distanceKm = totalMeters / 1000;
+        const [hour, minute] = timeStr.split(":" ).map(Number);
+        const isNight = (hour >= 22 || hour < 5);
+
+        let breakdown = [];
+        let fare = 341;
+        breakdown.push(`距離基本運賃：¥341`);
+        if (distanceKm > 1) {
+          const addFare = Math.ceil(distanceKm - 1) * 330;
+          fare += addFare;
+          breakdown.push(`追加距離：¥${addFare}`);
+        }
+        if (isNight) {
+          fare = Math.round(fare * 1.2);
+          breakdown.push(`深夜割増：×1.2`);
+        }
+
+        fare += 400;
+        breakdown.push(`予約料：¥400`);
+
+        fare += 1100;
+        breakdown.push(`乗降介助：¥1100`);
+
+        const indoor = parseInt(document.getElementById("indoorAssistants").value) || 0;
+        const indoorFare = indoor * 1100;
+        fare += indoorFare;
+        breakdown.push(`室内移動付乗降介助：¥${indoorFare}`);
+
+        const hours = parseInt(document.getElementById("assistantHours").value) || 1;
+        const nurses = parseInt(document.getElementById("nurseAssistants").value) || 0;
+        const helpers = parseInt(document.getElementById("helperAssistants").value) || 0;
+        let assistFare = nurses * 6000 * hours + helpers * 2500 * hours;
+        if (isNight) assistFare = Math.round(assistFare * 1.2);
+        fare += assistFare;
+        breakdown.push(`看護師・ヘルパー付添い：¥${assistFare}`);
+
+        const hospitalMin = parseInt(document.getElementById("hospitalSupport").value);
+        const hospitalFare = 1600 * (hospitalMin / 30);
+        fare += hospitalFare;
+        breakdown.push(`病院内付き添い：¥${hospitalFare}`);
+
+        const stairs = document.querySelector('input[name="stairsSupport"]:checked').value;
+        if (stairs === "yes") {
+          const stairFare = 2200 + 2 * (helpers > 0 ? 2500 * hours : 0);
+          fare += stairFare;
+          breakdown.push(`階段昇降介助（2名体制）：¥${stairFare}`);
+        }
+
+        const stretcher = document.querySelector('input[name="stretcher"]:checked').value;
+        if (stretcher === "yes") {
+          fare += 4000;
+          breakdown.push(`ストレッチャー使用料：¥4000`);
+        }
+
+        document.getElementById("result").innerHTML = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
+        document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km`;
+        document.getElementById("breakdown").innerHTML = `<h4>内訳</h4><ul><li>${breakdown.join('</li><li>')}</li></ul>`;
+      });
     }
   </script>
 </body>
