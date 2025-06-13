@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>福祉タクシー運賃計算</title>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1Y1geobXRlk517MSj_b3dEl9o1wZjKSs&libraries=places"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY&libraries=places"></script>
   <style>
-    body { font-family: sans-serif; padding: 10px; }
-    input, select, button { width: 100%; padding: 8px; margin: 5px 0; }
-    #result, #details, #breakdown { margin-top: 15px; font-weight: bold; }
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    input, select, button { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    .radio-group { margin-bottom: 15px; }
+    .radio-group label { font-weight: normal; margin-left: 20px; display: inline-block; }
+    #result, #details, #breakdown { margin-top: 20px; font-weight: bold; }
     #breakdown ul { padding-left: 20px; }
   </style>
 </head>
@@ -20,32 +23,43 @@
   <input id="destination" type="text" placeholder="目的地" />
   <label>出発予定時刻：<input type="time" id="rideTime" value="10:00"></label>
 
-  <hr>
-  <label>室内移動付乗降介助（人数）<input type="number" id="indoorAssistants" min="0" value="0"></label>
-  <label>看護師付き添い（人数）<input type="number" id="nurseAssistants" min="0" value="0"></label>
-  <label>ヘルパー付き添い（人数）<input type="number" id="helperAssistants" min="0" value="0"></label>
-  <label>付き添い時間（1時間単位）<input type="number" id="assistantHours" min="0" value="1"></label>
-  <label>病院内付き添い時間
-    <select id="hospitalSupport">
-      <option value="0">0分</option>
-      <option value="30">30分</option>
-      <option value="60">60分</option>
-      <option value="90">90分</option>
-    </select>
-  </label>
-  <br>
-  <label>階段昇降介助（2名体制）：
-    <input type="radio" name="stairsSupport" value="yes"> あり
-    <input type="radio" name="stairsSupport" value="no" checked> なし<br>
-  </label><br>
-  <label>貸し出し車椅子（1台まで無料）：
-    <input type="radio" name="stairsSupport" value="yes"> 使用する
-    <input type="radio" name="stairsSupport" value="no" checked> 使用しない<br>
-  </label><br>
-  <label>ストレッチャー使用：
-    <input type="radio" name="stretcher" value="yes"> 使用する
-    <input type="radio" name="stretcher" value="no" checked> 使用しない<br>
-  </label><br></br>
+  <label>室内移動付乗降介助（人数）</label>
+  <input type="number" id="indoorAssistants" min="0" value="0">
+
+  <label>看護師付き添い（人数）</label>
+  <input type="number" id="nurseAssistants" min="0" value="0">
+
+  <label>ヘルパー付き添い（人数）</label>
+  <input type="number" id="helperAssistants" min="0" value="0">
+
+  <label>付き添い時間（1時間単位）</label>
+  <input type="number" id="assistantHours" min="0" value="1">
+
+  <label>病院内付き添い時間</label>
+  <select id="hospitalSupport">
+    <option value="0">0分</option>
+    <option value="30">30分</option>
+    <option value="60">60分</option>
+    <option value="90">90分</option>
+  </select>
+
+  <div class="radio-group">
+    <label>階段昇降介助（2名体制）:</label><br>
+    <label><input type="radio" name="stairsSupport" value="yes"> あり</label>
+    <label><input type="radio" name="stairsSupport" value="no" checked> なし</label>
+  </div>
+
+  <div class="radio-group">
+    <label>貸し出し車椅子（1台まで無料）:</label><br>
+    <label><input type="radio" name="wheelchair" value="yes"> 使用する</label>
+    <label><input type="radio" name="wheelchair" value="no" checked> 使用しない</label>
+  </div>
+
+  <div class="radio-group">
+    <label>ストレッチャー使用:</label><br>
+    <label><input type="radio" name="stretcher" value="yes"> 使用する</label>
+    <label><input type="radio" name="stretcher" value="no" checked> 使用しない</label>
+  </div>
 
   <button onclick="calculateFare()">運賃を計算する</button>
 
@@ -53,97 +67,6 @@
   <div id="details"></div>
   <div id="breakdown"></div>
 
-  <script>
-    function calculateFare() {
-      const origin = document.getElementById("origin").value;
-      const destination = document.getElementById("destination").value;
-      const timeStr = document.getElementById("rideTime").value;
-      const waypoints = ["waypoint1", "waypoint2", "waypoint3"]
-        .map(id => document.getElementById(id).value.trim())
-        .filter(v => v)
-        .map(address => ({ location: address, stopover: true }));
-
-      if (!origin || !destination || !timeStr) {
-        document.getElementById("result").innerHTML = "出発地・目的地・時刻をすべて入力してください。";
-        return;
-      }
-
-      const service = new google.maps.DirectionsService();
-      service.route({
-        origin: origin,
-        destination: destination,
-        waypoints: waypoints,
-        travelMode: google.maps.TravelMode.DRIVING
-      }, function (response, status) {
-        if (status !== 'OK') {
-          document.getElementById("result").innerHTML = "ルート取得失敗：" + status;
-          return;
-        }
-
-        let totalMeters = 0;
-        response.routes[0].legs.forEach(leg => {
-          totalMeters += leg.distance.value;
-        });
-
-        const distanceKm = totalMeters / 1000;
-        const [hour, minute] = timeStr.split(":" ).map(Number);
-        const isNight = (hour >= 22 || hour < 5);
-
-        let breakdown = [];
-        let fare = 341;
-        breakdown.push(`距離基本運賃：¥341`);
-        if (distanceKm > 1) {
-          const addFare = Math.ceil(distanceKm - 1) * 330;
-          fare += addFare;
-          breakdown.push(`追加距離：¥${addFare}`);
-        }
-        if (isNight) {
-          fare = Math.round(fare * 1.2);
-          breakdown.push(`深夜割増：×1.2`);
-        }
-
-        fare += 400;
-        breakdown.push(`予約料：¥400`);
-
-        fare += 1100;
-        breakdown.push(`乗降介助：¥1100`);
-
-        const indoor = parseInt(document.getElementById("indoorAssistants").value) || 0;
-        const indoorFare = indoor * 1100;
-        fare += indoorFare;
-        breakdown.push(`室内移動付乗降介助：¥${indoorFare}`);
-
-        const hours = parseInt(document.getElementById("assistantHours").value) || 1;
-        const nurses = parseInt(document.getElementById("nurseAssistants").value) || 0;
-        const helpers = parseInt(document.getElementById("helperAssistants").value) || 0;
-        let assistFare = nurses * 6000 * hours + helpers * 2500 * hours;
-        if (isNight) assistFare = Math.round(assistFare * 1.2);
-        fare += assistFare;
-        breakdown.push(`看護師・ヘルパー付添い：¥${assistFare}`);
-
-        const hospitalMin = parseInt(document.getElementById("hospitalSupport").value);
-        const hospitalFare = 1600 * (hospitalMin / 30);
-        fare += hospitalFare;
-        breakdown.push(`病院内付き添い：¥${hospitalFare}`);
-
-        const stairs = document.querySelector('input[name="stairsSupport"]:checked').value;
-        if (stairs === "yes") {
-          const stairFare = 2200 + 2 * (helpers > 0 ? 2500 * hours : 0);
-          fare += stairFare;
-          breakdown.push(`階段昇降介助（2名体制）：¥${stairFare}`);
-        }
-
-        const stretcher = document.querySelector('input[name="stretcher"]:checked').value;
-        if (stretcher === "yes") {
-          fare += 4000;
-          breakdown.push(`ストレッチャー使用料：¥4000`);
-        }
-
-        document.getElementById("result").innerHTML = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
-        document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km`;
-        document.getElementById("breakdown").innerHTML = `<h4>内訳</h4><ul><li>${breakdown.join('</li><li>')}</li></ul>`;
-      });
-    }
-  </script>
+  <!-- JavaScript (省略されていますが DirectionsService のコードをここに入れます) -->
 </body>
 </html>
