@@ -32,8 +32,14 @@
   <label>ヘルパー付き添い（人数）</label>
   <input type="number" id="helperAssistants" min="0" value="0">
 
-  <label>付き添い時間（1時間単位）</label>
-  <input type="number" id="assistantHours" min="0" value="1">
+  <label>付き添い時間（30分単位）</label>
+  <select id="assistantHours">
+    <option value="0">0分</option>
+    <option value="0.5">30分</option>
+    <option value="1">60分</option>
+    <option value="1.5">90分</option>
+    <option value="2">120分</option>
+  </select>
 
   <label>病院内付き添い時間</label>
   <select id="hospitalSupport">
@@ -83,6 +89,9 @@
         return;
       }
 
+      const [hour, minute] = timeStr.split(":").map(Number);
+      const isNight = (hour >= 22 || hour < 5);
+
       const service = new google.maps.DirectionsService();
       service.route({
         origin: origin,
@@ -101,11 +110,9 @@
         });
 
         const distanceKm = totalMeters / 1000;
-        const [hour, minute] = timeStr.split(":" ).map(Number);
-        const isNight = (hour >= 22 || hour < 5);
-
-        let breakdown = [];
         let fare = 341;
+        let breakdown = [];
+
         breakdown.push(`距離基本運賃：¥341`);
         if (distanceKm > 1) {
           const addFare = Math.ceil(distanceKm - 1) * 330;
@@ -127,10 +134,11 @@
         fare += indoor * 1100;
         breakdown.push(`室内移動付乗降介助：¥${indoor * 1100}`);
 
-        const hours = parseInt(document.getElementById("assistantHours").value) || 1;
+        const assistUnit = parseFloat(document.getElementById("assistantHours").value) || 0;
         const nurses = parseInt(document.getElementById("nurseAssistants").value) || 0;
         const helpers = parseInt(document.getElementById("helperAssistants").value) || 0;
-        let assistFare = nurses * 6000 * hours + helpers * 2500 * hours;
+
+        let assistFare = (nurses * 3000 + helpers * 1250) * (assistUnit * 2);
         if (isNight) assistFare = Math.round(assistFare * 1.2);
         fare += assistFare;
         breakdown.push(`看護師・ヘルパー付添い：¥${assistFare}`);
@@ -142,7 +150,7 @@
 
         const stairs = document.querySelector('input[name="stairsSupport"]:checked').value;
         if (stairs === "yes") {
-          const stairFare = 2200 + 2 * (helpers > 0 ? 2500 * hours : 0);
+          const stairFare = 2200 + 2 * (helpers > 0 ? 1250 * (assistUnit * 2) : 0);
           fare += stairFare;
           breakdown.push(`階段昇降介助：¥${stairFare}`);
         }
@@ -158,9 +166,32 @@
           breakdown.push(`貸し出し車椅子：¥0`);
         }
 
-        document.getElementById("result").innerHTML = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
-        document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km`;
-        document.getElementById("breakdown").innerHTML = `<h4>内訳</h4><ul><li>${breakdown.join('</li><li>')}</li></ul>`;
+        // 迎車料金の処理
+        const pickupBase = "千葉県佐倉市上志津1668-9";
+        const pickupService = new google.maps.DistanceMatrixService();
+        pickupService.getDistanceMatrix({
+          origins: [pickupBase],
+          destinations: [origin],
+          travelMode: google.maps.TravelMode.DRIVING
+        }, function(pickupResponse, pickupStatus) {
+          if (pickupStatus !== 'OK') {
+            document.getElementById("result").innerHTML = "迎車距離取得失敗：" + pickupStatus;
+            return;
+          }
+
+          const pickupDistance = pickupResponse.rows[0].elements[0].distance.value / 1000;
+          if (pickupDistance > 2) {
+            const pickupFare = Math.ceil((pickupDistance - 2) / 2) * 750;
+            fare += pickupFare;
+            breakdown.push(`迎車料金（${pickupDistance.toFixed(2)}km）：¥${pickupFare}`);
+          } else {
+            breakdown.push(`迎車料金（2km以内）：¥0`);
+          }
+
+          document.getElementById("result").innerHTML = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
+          document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km`;
+          document.getElementById("breakdown").innerHTML = `<h4>内訳</h4><ul><li>${breakdown.join('</li><li>')}</li></ul>`;
+        });
       });
     }
   </script>
