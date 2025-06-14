@@ -93,6 +93,39 @@
     </div>
   </div>
 
-  <!-- JavaScript関数群はこのまま -->
+  <script>
+    function calculateFare() {
+      const result = document.getElementById("result");
+      const details = document.getElementById("details");
+      const breakdownDiv = document.getElementById("breakdown");
+
+      result.innerHTML = "計算中...";
+      details.innerHTML = "";
+      breakdownDiv.innerHTML = "";
+
+      setTimeout(() => {
+        const breakdown = [
+          "距離基本運賃：¥341",
+          "追加距離：¥330",
+          "深夜割増：×1.2",
+          "予約料：¥400",
+          "乗降介助：¥1100",
+          "室内移動付乗降介助：¥1100",
+          "看護師・ヘルパー付添い：¥6000",
+          "階段昇降介助：¥2200",
+          "ストレッチャー使用料：¥4000",
+          "貸し出し車椅子：¥0",
+          "迎車料金（2km以内）：¥0"
+        ];
+
+        const fare = 341 + 330 + 400 + 1100 + 1100 + 6000 + 2200 + 4000; // 仮の合計
+        const breakdownHTML = breakdown.map(item => `<li>${item}</li>`).join('');
+
+        result.innerHTML = `合計運賃：¥${fare.toLocaleString()}（通常料金）`;
+        details.innerHTML = `距離：5.0 km`;
+        breakdownDiv.innerHTML = `<h4>内訳</h4><ul>${breakdownHTML}</ul>`;
+      }, 500);
+    }
+  </script>
 </body>
 </html>
