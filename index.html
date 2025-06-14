@@ -61,11 +61,9 @@
     <label><input type="radio" name="stretcher" value="no" checked> 使用しない</label>
   </div>
   <button onclick="calculateFare()">運賃を計算する</button>
-
   <div id="result"></div>
   <div id="details"></div>
   <div id="breakdown"></div>
-
   <button onclick="generatePDF()">PDFを出力する</button>
 
   <div id="invoice" style="display:none;">
@@ -94,37 +92,30 @@
   </div>
 
   <script>
-    function calculateFare() {
-      const result = document.getElementById("result");
-      const details = document.getElementById("details");
-      const breakdownDiv = document.getElementById("breakdown");
+    function generatePDF() {
+      const breakdownList = document.querySelector('#breakdown ul');
+      if (!breakdownList) {
+        alert('先に「運賃を計算する」を実行してください。');
+        return;
+      }
+      const tableHTML = Array.from(breakdownList.children).map(item => `<tr><td>${item.innerText}</td></tr>`).join('');
+      const finalRow = `<tr><td><strong>` + document.getElementById("result").innerText + `</strong></td></tr>`;
+      const fullTable = `<tr><th>内訳明細</th></tr>` + tableHTML + finalRow;
 
-      result.innerHTML = "計算中...";
-      details.innerHTML = "";
-      breakdownDiv.innerHTML = "";
+      document.getElementById("invoice-table").innerHTML = fullTable;
+      document.getElementById("invoice-table-copy").innerHTML = fullTable;
 
-      setTimeout(() => {
-        const breakdown = [
-          "距離基本運賃：¥341",
-          "追加距離：¥330",
-          "深夜割増：×1.2",
-          "予約料：¥400",
-          "乗降介助：¥1100",
-          "室内移動付乗降介助：¥1100",
-          "看護師・ヘルパー付添い：¥6000",
-          "階段昇降介助：¥2200",
-          "ストレッチャー使用料：¥4000",
-          "貸し出し車椅子：¥0",
-          "迎車料金（2km以内）：¥0"
-        ];
-
-        const fare = 341 + 330 + 400 + 1100 + 1100 + 6000 + 2200 + 4000; // 仮の合計
-        const breakdownHTML = breakdown.map(item => `<li>${item}</li>`).join('');
-
-        result.innerHTML = `合計運賃：¥${fare.toLocaleString()}（通常料金）`;
-        details.innerHTML = `距離：5.0 km`;
-        breakdownDiv.innerHTML = `<h4>内訳</h4><ul>${breakdownHTML}</ul>`;
-      }, 500);
+      const element = document.getElementById("invoice");
+      element.style.display = "block";
+      html2pdf().set({
+        margin: 10,
+        filename: '福祉タクシー請求書_領収書.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }).from(element).save().then(() => {
+        element.style.display = "none";
+      });
     }
   </script>
 </body>
