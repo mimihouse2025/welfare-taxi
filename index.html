@@ -41,14 +41,6 @@
     <option value="2">120分</option>
   </select>
 
-  <label>病院内付き添い時間</label>
-  <select id="hospitalSupport">
-    <option value="0">0分</option>
-    <option value="30">30分</option>
-    <option value="60">60分</option>
-    <option value="90">90分</option>
-  </select>
-
   <div class="radio-group">
     <label>階段昇降介助（2名体制）:</label><br>
     <label><input type="radio" name="stairsSupport" value="yes"> あり</label>
@@ -143,11 +135,6 @@
         fare += assistFare;
         breakdown.push(`看護師・ヘルパー付添い：¥${assistFare}`);
 
-        const hospitalMin = parseInt(document.getElementById("hospitalSupport").value);
-        const hospitalFare = 1600 * (hospitalMin / 30);
-        fare += hospitalFare;
-        breakdown.push(`病院内付き添い：¥${hospitalFare}`);
-
         const stairs = document.querySelector('input[name="stairsSupport"]:checked').value;
         if (stairs === "yes") {
           const stairFare = 2200 + 2 * (helpers > 0 ? 1250 * (assistUnit * 2) : 0);
@@ -166,7 +153,6 @@
           breakdown.push(`貸し出し車椅子：¥0`);
         }
 
-        // 迎車料金の処理
         const pickupBase = "千葉県佐倉市上志津1668-9";
         const pickupService = new google.maps.DistanceMatrixService();
         pickupService.getDistanceMatrix({
