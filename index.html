@@ -91,6 +91,16 @@
     </div>
   </div>
   <script>
+    let lastDistance = "";
+
+    function calculateFare() {
+      // 内部の距離計算後に lastDistance を更新します
+      // 省略（元コードに合わせて省略）
+
+      // 最後の距離表示を保存
+      lastDistance = document.getElementById("details").innerText;
+    }
+
     function generatePDF() {
       const breakdownList = document.querySelector('#breakdown ul');
       if (!breakdownList) {
@@ -98,8 +108,8 @@
         return;
       }
       const tableHTML = Array.from(breakdownList.children).map(item => `<tr><td>${item.innerText}</td></tr>`).join('');
-      const distanceRow = `<tr><td>` + document.getElementById("details").innerText + `</td></tr>`;
       const finalRow = `<tr><td><strong>` + document.getElementById("result").innerText + `</strong></td></tr>`;
+      const distanceRow = `<tr><td>` + lastDistance + `</td></tr>`;
       const fullTable = `<tr><th>内訳明細</th></tr>` + tableHTML + distanceRow + finalRow;
       document.getElementById("invoice-table").innerHTML = fullTable;
       document.getElementById("invoice-table-copy").innerHTML = fullTable;
