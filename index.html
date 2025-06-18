@@ -99,7 +99,7 @@
       const origin = document.getElementById("origin").value;
       const destination = document.getElementById("destination").value;
       const timeStr = document.getElementById("rideTime").value;
-      const [hour] = timeStr.split(":".map(Number));
+      const [hour] = timeStr.split(":").map(Number);
       const isNight = (hour >= 22 || hour < 5);
 
       const service = new google.maps.DirectionsService();
