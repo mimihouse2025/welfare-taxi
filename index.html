@@ -66,29 +66,34 @@
   <div id="breakdown"></div>
   <button onclick="generatePDF()">PDFを出力する</button>
   <div id="invoice" style="display:none;">
-    <div class="invoice-block">
-      <div class="invoice-title">福祉タクシー利用料（請 求 書）</div>
-      <div class="invoice-header">
-        <div>宛名：__________________________</div>
-        <div>発行日：________年____月____日</div>
-      </div>
-      <div>車種：__________________________</div>
-      <div>発行元：一般社団法人NURTURES　みみの家</div>
-      <table class="invoice-table" id="invoice-table"></table>
-      <div class="stamp-box">運転者印</div>
+  <div class="invoice-block">
+    <div class="invoice-title">福祉タクシー利用料（請 求 書）</div>
+    <div class="invoice-header">
+      <div>宛名：__________________________</div>
+      <div>発行日：________年____月____日</div>
     </div>
-    <div class="invoice-block">
-      <div class="invoice-title">福祉タクシー利用料（領 収 書）</div>
-      <div class="invoice-header">
-        <div>宛名：__________________________</div>
-        <div>発行日：________年____月____日</div>
-      </div>
-      <div>車種：__________________________</div>
+    <div>車種：__________________________</div>
+    <div style="display: flex; justify-content: space-between;">
       <div>発行元：一般社団法人NURTURES　みみの家</div>
-      <table class="invoice-table" id="invoice-table-copy"></table>
-      <div class="stamp-box">運転者印</div>
+      <div>印</div>
     </div>
+    <table class="invoice-table" id="invoice-table"></table>
   </div>
+
+  <div class="invoice-block">
+    <div class="invoice-title">福祉タクシー利用料（領 収 書）</div>
+    <div class="invoice-header">
+      <div>宛名：__________________________</div>
+      <div>発行日：________年____月____日</div>
+    </div>
+    <div>車種：__________________________</div>
+    <div style="display: flex; justify-content: space-between;">
+      <div>発行元：一般社団法人NURTURES　みみの家</div>
+      <div>印</div>
+    </div>
+    <table class="invoice-table" id="invoice-table-copy"></table>
+  </div>
+</div>
 
   <script>
     let distanceKmGlobal = 0;
