@@ -28,6 +28,13 @@
   <input id="origin" type="text" placeholder="出発地" />
   <input id="destination" type="text" placeholder="目的地" />
   <label>出発予定時刻：<input type="time" id="rideTime" value="10:00"></label>
+
+  <div class="radio-group">
+    <label>乗降介助:</label><br>
+    <label><input type="radio" name="boardingAssist" value="yes" checked> あり</label>
+    <label><input type="radio" name="boardingAssist" value="no"> なし</label>
+  </div>
+
   <label>室内移動付乗降介助（人数）</label>
   <input type="number" id="indoorAssistants" min="0" value="0">
   <label>看護師付き添い（人数）</label>
@@ -131,8 +138,12 @@
         }
         fare += 400;
         breakdown.push("予約料：¥400");
-        fare += 1100;
-        breakdown.push("乗降介助：¥1100");
+
+        const boardingAssist = document.querySelector('input[name="boardingAssist"]:checked').value;
+        if (boardingAssist === "yes") {
+          fare += 1100;
+          breakdown.push("乗降介助：¥1100");
+        }
 
         const indoor = parseInt(document.getElementById("indoorAssistants").value) || 0;
         fare += indoor * 1100;
