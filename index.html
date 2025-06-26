@@ -106,15 +106,11 @@
       const origin = document.getElementById("origin").value;
       const destination = document.getElementById("destination").value;
       const timeStr = document.getElementById("rideTime").value;
-      const [hour] = timeStr.split(":").map(Number);
+      const [hour] = timeStr.split(":" ).map(Number);
       const isNight = (hour >= 22 || hour < 5);
 
       const service = new google.maps.DirectionsService();
-      service.route({
-        origin,
-        destination,
-        travelMode: google.maps.TravelMode.DRIVING
-      }, function(response, status) {
+      service.route({ origin, destination, travelMode: google.maps.TravelMode.DRIVING }, function(response, status) {
         if (status !== 'OK') {
           document.getElementById("result").innerHTML = "ルート取得失敗：" + status;
           return;
@@ -126,7 +122,12 @@
         distanceKmGlobal = distanceKm;
 
         let fare = 341;
-        let breakdown = ["距離基本運賃：¥341"];
+        let breakdown = [
+          `出発地：${origin}`,
+          `目的地：${destination}`,
+          "距離基本運賃：¥341"
+        ];
+
         if (distanceKm > 1) {
           const addFare = Math.ceil(distanceKm - 1) * 330;
           fare += addFare;
@@ -181,14 +182,23 @@
 
     function generatePDF() {
       const breakdownList = document.querySelector('#breakdown ul');
+      const origin = document.getElementById("origin").value;
+      const destination = document.getElementById("destination").value;
+
       if (!breakdownList) {
         alert('先に「運賃を計算する」を実行してください。');
         return;
       }
-      const tableHTML = Array.from(breakdownList.children).map(item => `<tr><td>${item.innerText}</td></tr>`).join('');
-      const distanceRow = `<tr><td><strong>走行距離：${distanceKmGlobal.toFixed(2)} km</strong></td></tr>`;
-      const finalRow = `<tr><td><strong>` + document.getElementById("result").innerText + `</strong></td></tr>`;
-      const fullTable = `<tr><th>内訳明細</th></tr>` + tableHTML + distanceRow + finalRow;
+
+      const tableHTML = [
+        `<tr><td>出発地：${origin}</td></tr>`,
+        `<tr><td>目的地：${destination}</td></tr>`,
+        ...Array.from(breakdownList.children).map(item => `<tr><td>${item.innerText}</td></tr>`),
+        `<tr><td><strong>走行距離：${distanceKmGlobal.toFixed(2)} km</strong></td></tr>`,
+        `<tr><td><strong>${document.getElementById("result").innerText}</strong></td></tr>`
+      ].join('');
+
+      const fullTable = `<tr><th>内訳明細</th></tr>` + tableHTML;
 
       document.getElementById("invoice-table").innerHTML = fullTable;
       document.getElementById("invoice-table-copy").innerHTML = fullTable;
