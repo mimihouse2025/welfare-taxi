@@ -19,7 +19,7 @@
     .invoice-title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; }
     .stamp-box { border: 1px solid #000; width: 100px; height: 80px; text-align: center; line-height: 80px; float: right; margin-top: 10px; }
     .invoice-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    .invoice-table th, .invoice-table td { border: 1px solid #000; padding: 6px; text-align: left; }
+    .invoice-table th, .invoice-table td { border: 1px solid #000; padding: 4px; text-align: left; }
     .invoice-footer { margin-top: 10px; }
   </style>
 </head>
@@ -122,11 +122,7 @@
         distanceKmGlobal = distanceKm;
 
         let fare = 341;
-        let breakdown = [
-          `出発地：${origin}`,
-          `目的地：${destination}`,
-          "距離基本運賃：¥341"
-        ];
+        let breakdown = ["距離基本運賃：¥341"];
 
         if (distanceKm > 1) {
           const addFare = Math.ceil(distanceKm - 1) * 330;
@@ -176,7 +172,7 @@
 
         document.getElementById("result").innerHTML = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
         document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km`;
-        document.getElementById("breakdown").innerHTML = `<h4>内訳</h4><ul><li>${breakdown.join('</li><li>')}</li></ul>`;
+        document.getElementById("breakdown").innerHTML = `<h4>内訳</h4><ul><li>出発地：${origin}</li><li>目的地：${destination}</li><li>${breakdown.join('</li><li>')}</li></ul>`;
       });
     }
 
@@ -191,8 +187,6 @@
       }
 
       const tableHTML = [
-        `<tr><td>出発地：${origin}</td></tr>`,
-        `<tr><td>目的地：${destination}</td></tr>`,
         ...Array.from(breakdownList.children).map(item => `<tr><td>${item.innerText}</td></tr>`),
         `<tr><td><strong>走行距離：${distanceKmGlobal.toFixed(2)} km</strong></td></tr>`,
         `<tr><td><strong>${document.getElementById("result").innerText}</strong></td></tr>`
