@@ -27,7 +27,15 @@
   <h3>福祉タクシー 利用料計算</h3>
   <input id="origin" type="text" placeholder="出発地" />
   <input id="destination" type="text" placeholder="目的地" />
-  <label>出発予定時刻：<input type="time" id="rideTime" value="10:00"></label>
+  <label>出発予定時刻：
+    <input type="time" id="rideTime" value="10:00">
+  </label>
+  <label>ご希望車種：＊軽自動車には車椅子は乗せられません。
+    <select id="vehicleType">
+      <option value="軽自動車">軽自動車</option>
+      <option value="大型ワンボックス">ワンボックス型</option>
+    </select>
+  </label>
 
   <div class="radio-group">
     <label>乗降介助:</label><br>
@@ -77,7 +85,7 @@
         <div>宛名：__________________________</div>
         <div>発行日：________年____月____日</div>
       </div>
-      <div>車種：__________________________</div>
+      <div>車種：<span id="invoiceVehicle"></span></div>
       <div style="display: flex; justify-content: space-between;">
         <div>発行元：一般社団法人NURTURES　みみの家</div>
         <div>印</div>
@@ -90,7 +98,7 @@
         <div>宛名：__________________________</div>
         <div>発行日：________年____月____日</div>
       </div>
-      <div>車種：__________________________</div>
+      <div>車種：<span id="invoiceVehicleCopy"></span></div>
       <div style="display: flex; justify-content: space-between;">
         <div>発行元：一般社団法人NURTURES　みみの家</div>
         <div>印</div>
@@ -105,8 +113,9 @@
     function calculateFare() {
       const origin = document.getElementById("origin").value;
       const destination = document.getElementById("destination").value;
+      const vehicleType = document.getElementById("vehicleType").value;
       const timeStr = document.getElementById("rideTime").value;
-      const [hour] = timeStr.split(":" ).map(Number);
+      const [hour] = timeStr.split(":").map(Number);
       const isNight = (hour >= 22 || hour < 5);
 
       const service = new google.maps.DirectionsService();
@@ -172,7 +181,14 @@
 
         document.getElementById("result").innerHTML = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
         document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km`;
-        document.getElementById("breakdown").innerHTML = `<h4>内訳</h4><ul><li>出発地：${origin}</li><li>目的地：${destination}</li><li>${breakdown.join('</li><li>')}</li></ul>`;
+        document.getElementById("breakdown").innerHTML =
+          `<h4>内訳</h4>
+           <ul>
+             <li>車種：${vehicleType}</li>
+             <li>出発地：${origin}</li>
+             <li>目的地：${destination}</li>
+             <li>${breakdown.join('</li><li>')}</li>
+           </ul>`;
       });
     }
 
@@ -180,11 +196,16 @@
       const breakdownList = document.querySelector('#breakdown ul');
       const origin = document.getElementById("origin").value;
       const destination = document.getElementById("destination").value;
+      const vehicleType = document.getElementById("vehicleType").value;
 
       if (!breakdownList) {
         alert('先に「運賃を計算する」を実行してください。');
         return;
       }
+
+      // Set vehicle type in invoice and receipt
+      document.getElementById("invoiceVehicle").innerText = vehicleType;
+      document.getElementById("invoiceVehicleCopy").innerText = vehicleType;
 
       const tableHTML = [
         ...Array.from(breakdownList.children).map(item => `<tr><td>${item.innerText}</td></tr>`),
