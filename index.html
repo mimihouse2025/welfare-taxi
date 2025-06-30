@@ -84,7 +84,7 @@
       <div class="invoice-header">
         <div>宛名：__________________________</div>
         <div>発行日：________年____月____日</div>
-      </div>
+      </</div>
       <div>車種：<span id="invoiceVehicle"></span></div>
       <div style="display: flex; justify-content: space-between;">
         <div>発行元：一般社団法人NURTURES　みみの家</div>
@@ -163,25 +163,17 @@
         fare += assistFare;
         breakdown.push("看護師・ヘルパー付添い：¥" + assistFare);
 
-        // "看護師・ヘルパー付添い"項目の次に時間を挿入
-        const assistMinutes = assistUnit * 60;
-        const idx = breakdown.findIndex(item => item.startsWith("看護師・ヘルパー付添い"));
-        if (idx !== -1) breakdown.splice(idx+1, 0, `付添い時間：${assistMinutes}分`);
-
+        // 階段昇降介助
         const stairs = document.querySelector('input[name="stairsSupport"]:checked').value;
         if (stairs === "yes") {
-          // 階段昇降介助の追加スタッフ数を決定
-          const nursesCount = nurses;
-          const helpersCount = helpers;
-          const hoursUnit = assistUnit;
-          const halfHours = hoursUnit * 2;
-          const additionalAttendants = (nursesCount > 0 || helpersCount > 0) ? 1 : 2;
-          // レートは看護師優先、なければヘルパー
-          const ratePerAttendant = nursesCount > 0 ? 3000 : 1250;
-          const attendantsCost = ratePerAttendant * halfHours * additionalAttendants;
-          const stairFare = 2200 + attendantsCost;
-          fare += stairFare;
-          breakdown.push(`階段昇降介助料金：¥${stairFare} 詳細をご予約時にお知らせください。`);
+          if (nurses === 0 && helpers === 0) {
+            alert("階段昇降介助には看護師またはヘルパーの付添いが必要です。");
+          } else {
+            const attendantCount = nurses + helpers;
+            const stairFare = 1600;
+            fare += stairFare;
+            breakdown.push(`階段昇降介助（人数：${attendantCount}）：¥${stairFare}`);
+          }
         }
 
         const stretcher = document.querySelector('input[name="stretcher"]:checked').value;
@@ -194,53 +186,4 @@
         if (wheelchair === "yes") breakdown.push("貸し出し車椅子：¥0");
 
         document.getElementById("result").innerText = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
-        document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km<br>`;
-        // 内訳リスト描画
-        document.getElementById("breakdown").innerHTML =
-          `<h4>内訳</h4>
-           <ul>
-             <li>車種：${vehicleType}</li>
-             <li>出発地：${origin}</li>
-             <li>目的地：${destination}</li>
-             ${breakdown.map(item => `<li>${item}</li>`).join('')}
-           </ul>`;
-      });
-    }
-
-    function generatePDF() {
-      const breakdownList = document.querySelector('#breakdown ul');
-      if (!breakdownList) {
-        alert('先に「運賃を計算する」を実行してください。');
-        return;
-      }
-
-      const vehicleType = document.getElementById("vehicleType").value;
-      document.getElementById("invoiceVehicle").innerText = vehicleType;
-      document.getElementById("invoiceVehicleCopy").innerText = vehicleType;
-
-      const tableHTML = [
-        ...Array.from(breakdownList.children).map(item => `<tr><td>${item.innerText}</td></tr>`),
-        `<tr><td><strong>走行距離：${distanceKmGlobal.toFixed(2)} km</strong></td></tr>`,
-        `<tr><td><strong>${document.getElementById("result").innerText}</strong></td></tr>`
-      ].join('');
-
-      const fullTable = `<tr><th>内訳明細</th></tr>` + tableHTML;
-
-      document.getElementById("invoice-table").innerHTML = fullTable;
-      document.getElementById("invoice-table-copy").innerHTML = fullTable;
-
-      const element = document.getElementById("invoice");
-      element.style.display = "block";
-      html2pdf().set({
-        margin: 10,
-        filename: '福祉タクシー請求書_領収書.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).from(element).save().then(() => {
-        element.style.display = "none";
-      });
-    }
-  </script>
-</body>
-</html>
+        document.getElementById("details").innerHTML = `距離：${distanceKm.to
