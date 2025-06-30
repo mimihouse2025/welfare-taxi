@@ -57,21 +57,25 @@
     <option value="1.5">90分</option>
     <option value="2">120分</option>
   </select>
+
   <div class="radio-group">
     <label>階段昇降介助（2名体制）:</label><br>
     <label><input type="radio" name="stairsSupport" value="yes"> あり</label>
     <label><input type="radio" name="stairsSupport" value="no" checked> なし</label>
   </div>
+
   <div class="radio-group">
     <label>貸し出し車椅子（1台まで無料）:</label><br>
     <label><input type="radio" name="wheelchair" value="yes"> 使用する</label>
     <label><input type="radio" name="wheelchair" value="no" checked> 使用しない</label>
   </div>
+
   <div class="radio-group">
     <label>ストレッチャー使用:</label><br>
     <label><input type="radio" name="stretcher" value="yes"> 使用する</label>
     <label><input type="radio" name="stretcher" value="no" checked> 使用しない</label>
   </div>
+
   <button onclick="calculateFare()">運賃を計算する</button>
   <div id="result"></div>
   <div id="details"></div>
@@ -119,12 +123,17 @@
       const isNight = (hour >= 22 || hour < 5);
 
       const service = new google.maps.DirectionsService();
-      service.route({ origin, destination, travelMode: google.maps.DirectionsTravelMode.DRIVING }, function(response, status) {
+      service.route({
+        origin,
+        destination,
+        travelMode: google.maps.TravelMode.DRIVING
+      }, function(response, status) {
         if (status !== 'OK') {
           document.getElementById("result").innerHTML = "ルート取得失敗：" + status;
           return;
         }
 
+        // 距離計算
         let totalMeters = 0;
         response.routes[0].legs.forEach(leg => totalMeters += leg.distance.value);
         const distanceKm = totalMeters / 1000;
@@ -133,28 +142,34 @@
         let fare = 341;
         let breakdown = ["距離基本運賃：¥341"];
 
+        // 追加距離
         if (distanceKm > 1) {
           const addFare = Math.ceil(distanceKm - 1) * 330;
           fare += addFare;
           breakdown.push(`追加距離：¥${addFare}`);
         }
+        // 深夜割増
         if (isNight) {
           fare = Math.round(fare * 1.2);
           breakdown.push("深夜割増：×1.2");
         }
+        // 予約料
         fare += 400;
         breakdown.push("予約料：¥400");
 
+        // 乗降介助
         const boardingAssist = document.querySelector('input[name="boardingAssist"]:checked').value;
         if (boardingAssist === "yes") {
           fare += 1100;
           breakdown.push("乗降介助：¥1100");
         }
 
+        // 室内移動付乗降介助
         const indoor = parseInt(document.getElementById("indoorAssistants").value) || 0;
         fare += indoor * 1100;
         breakdown.push(`室内移動付乗降介助：¥${indoor * 1100}`);
 
+        // 付き添い
         const assistUnit = parseFloat(document.getElementById("assistantHours").value) || 0;
         const nurses = parseInt(document.getElementById("nurseAssistants").value) || 0;
         const helpers = parseInt(document.getElementById("helperAssistants").value) || 0;
@@ -162,31 +177,38 @@
         if (isNight) assistFare = Math.round(assistFare * 1.2);
         fare += assistFare;
         breakdown.push("看護師・ヘルパー付添い：¥" + assistFare);
-
-        // "看護師・ヘルパー付添い"項目の次に時間を挿入
+        // 付き添い時間を次に挿入
         const assistMinutes = assistUnit * 60;
         const idx = breakdown.findIndex(item => item.startsWith("看護師・ヘルパー付添い"));
-        if (idx !== -1) breakdown.splice(idx+1, 0, `付添い時間：${assistMinutes}分`);
+        if (idx !== -1) breakdown.splice(idx + 1, 0, `付添い時間：${assistMinutes}分`);
 
+        // 階段昇降介助（変更部分）
         const stairs = document.querySelector('input[name="stairsSupport"]:checked').value;
         if (stairs === "yes") {
-          const stairFare = 2200 + 2 * (helpers > 0 ? 1250 * (assistUnit * 2) : 0);
-          fare += stairFare;
-          breakdown.push(`階段昇降介助：¥${stairFare}`);
+          // ヘルパーまたは看護師の希望がある場合は1名、無い場合は2名
+          const additionalStaff = (helpers > 0 || nurses > 0) ? 1 : 2;
+          // 詳細は予約時に要確認のメッセージを表示
+          breakdown.push(`階段昇降介助：詳細をご予約時にお知らせください。 (追加スタッフ数：${additionalStaff}名)`);
         }
 
+        // ストレッチャー使用料
         const stretcher = document.querySelector('input[name="stretcher"]:checked').value;
         if (stretcher === "yes") {
           fare += 4000;
           breakdown.push("ストレッチャー使用料：¥4000");
         }
 
+        // 車椅子貸し出し
         const wheelchair = document.querySelector('input[name="wheelchair"]:checked').value;
-        if (wheelchair === "yes") breakdown.push("貸し出し車椅子：¥0");
+        if (wheelchair === "yes") {
+          breakdown.push("貸し出し車椅子：¥0");
+        }
 
-        document.getElementById("result").innerText = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
-        document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km<br>`;
-        // 内訳リスト描画
+        // 結果表示
+        document.getElementById("result").innerText =
+          `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
+        document.getElementById("details").innerHTML =
+          `距離：${distanceKm.toFixed(2)} km<br>`;
         document.getElementById("breakdown").innerHTML =
           `<h4>内訳</h4>
            <ul>
@@ -209,12 +231,12 @@
       document.getElementById("invoiceVehicle").innerText = vehicleType;
       document.getElementById("invoiceVehicleCopy").innerText = vehicleType;
 
+      // 内訳明細テーブル生成（PDFにも「詳細をご予約時にお知らせください。」を含む）
       const tableHTML = [
-        ...Array.from(breakdownList.children).map(item => `<tr><td>${item.innerText}</td></tr>`),
+        ...Array.from(breakdownList.children).map(li => `<tr><td>${li.innerText}</td></tr>`),
         `<tr><td><strong>走行距離：${distanceKmGlobal.toFixed(2)} km</strong></td></tr>`,
         `<tr><td><strong>${document.getElementById("result").innerText}</strong></td></tr>`
       ].join('');
-
       const fullTable = `<tr><th>内訳明細</th></tr>` + tableHTML;
 
       document.getElementById("invoice-table").innerHTML = fullTable;
