@@ -30,10 +30,10 @@
   <label>出発予定時刻：
     <input type="time" id="rideTime" value="10:00">
   </label>
-  <label>ご希望車種：＊軽自動車には車椅子は乗せられません。
+  <label>車種：
     <select id="vehicleType">
       <option value="軽自動車">軽自動車</option>
-      <option value="大型ワンボックス">ワンボックス型</option>
+      <option value="大型ワンボックス">大型ワンボックス</option>
     </select>
   </label>
 
@@ -179,14 +179,17 @@
         const wheelchair = document.querySelector('input[name="wheelchair"]:checked').value;
         if (wheelchair === "yes") breakdown.push("貸し出し車椅子：¥0");
 
-        document.getElementById("result").innerHTML = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
-        document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km`;
+        document.getElementById("result").innerText = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
+        // 距離と付き添い時間を表示
+        document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km<br>付き添い時間：${assistUnit * 60}分`;
+        // 内訳に付き添い時間を加える
         document.getElementById("breakdown").innerHTML =
           `<h4>内訳</h4>
            <ul>
              <li>車種：${vehicleType}</li>
              <li>出発地：${origin}</li>
              <li>目的地：${destination}</li>
+             <li>付き添い時間：${assistUnit * 60}分</li>
              <li>${breakdown.join('</li><li>')}</li>
            </ul>`;
       });
@@ -194,16 +197,12 @@
 
     function generatePDF() {
       const breakdownList = document.querySelector('#breakdown ul');
-      const origin = document.getElementById("origin").value;
-      const destination = document.getElementById("destination").value;
-      const vehicleType = document.getElementById("vehicleType").value;
-
       if (!breakdownList) {
         alert('先に「運賃を計算する」を実行してください。');
         return;
       }
 
-      // Set vehicle type in invoice and receipt
+      const vehicleType = document.getElementById("vehicleType").value;
       document.getElementById("invoiceVehicle").innerText = vehicleType;
       document.getElementById("invoiceVehicleCopy").innerText = vehicleType;
 
