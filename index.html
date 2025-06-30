@@ -19,7 +19,7 @@
     .invoice-title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; }
     .stamp-box { border: 1px solid #000; width: 100px; height: 80px; text-align: center; line-height: 80px; float: right; margin-top: 10px; }
     .invoice-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    .invoice-table th, .invoice-table td { border: 1px solid #000; padding: 4px; text-align: left; }
+    .invoice-table th, .invoice-table td { border: 1px solid #000; padding: 2px; text-align: left; }
     .invoice-footer { margin-top: 10px; }
   </style>
 </head>
@@ -30,7 +30,7 @@
   <label>出発予定時刻：
     <input type="time" id="rideTime" value="10:00">
   </label>
-  <label>車種：ご希望車種：＊軽自動車には車椅子は乗せられません。
+  <label>ご希望車種：＊軽自動車には車椅子は乗せられません。
     <select id="vehicleType">
       <option value="軽自動車">軽自動車</option>
       <option value="大型ワンボックス">ワンボックス型</option>
@@ -119,7 +119,7 @@
       const isNight = (hour >= 22 || hour < 5);
 
       const service = new google.maps.DirectionsService();
-      service.route({ origin, destination, travelMode: google.maps.TravelMode.DRIVING }, function(response, status) {
+      service.route({ origin, destination, travelMode: google.maps.DirectionsTravelMode.DRIVING }, function(response, status) {
         if (status !== 'OK') {
           document.getElementById("result").innerHTML = "ルート取得失敗：" + status;
           return;
@@ -161,7 +161,12 @@
         let assistFare = (nurses * 3000 + helpers * 1250) * (assistUnit * 2);
         if (isNight) assistFare = Math.round(assistFare * 1.2);
         fare += assistFare;
-        breakdown.push(`看護師・ヘルパー付添い：¥${assistFare}`);
+        breakdown.push("看護師・ヘルパー付添い：¥" + assistFare);
+
+        // "看護師・ヘルパー付添い"項目の次に時間を挿入
+        const assistMinutes = assistUnit * 60;
+        const idx = breakdown.findIndex(item => item.startsWith("看護師・ヘルパー付添い"));
+        if (idx !== -1) breakdown.splice(idx+1, 0, `付添い時間：${assistMinutes}分`);
 
         const stairs = document.querySelector('input[name="stairsSupport"]:checked').value;
         if (stairs === "yes") {
@@ -180,17 +185,15 @@
         if (wheelchair === "yes") breakdown.push("貸し出し車椅子：¥0");
 
         document.getElementById("result").innerText = `合計運賃：¥${fare.toLocaleString()}（${isNight ? "深夜料金適用" : "通常料金"}）`;
-        // 距離と付き添い時間を表示
-        document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km<br>付き添い時間：${assistUnit * 60}分`;
-        // 内訳に付き添い時間を加える
+        document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km<br>`;
+        // 内訳リスト描画
         document.getElementById("breakdown").innerHTML =
           `<h4>内訳</h4>
            <ul>
              <li>車種：${vehicleType}</li>
              <li>出発地：${origin}</li>
              <li>目的地：${destination}</li>
-             <li>付き添い時間：${assistUnit * 60}分</li>
-             <li>${breakdown.join('</li><li>')}</li>
+             ${breakdown.map(item => `<li>${item}</li>`).join('')}
            </ul>`;
       });
     }
