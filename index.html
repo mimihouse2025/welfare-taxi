@@ -104,6 +104,7 @@
 
     function calculateFare() {
       console.clear();
+      console.log('calculateFare called');
       const origin = document.getElementById("origin").value;
       const destination = document.getElementById("destination").value;
       if (!origin || !destination) {
@@ -150,17 +151,10 @@
         const assistUnit = parseFloat(document.getElementById("assistantHours").value) || 0;
         const nurseCount = parseInt(document.getElementById("nurseAssistants").value) || 0;
         const helperCount = parseInt(document.getElementById("helperAssistants").value) || 0;
-        // 付添い時間必須チェック
-        if ((nurseCount + helperCount) > 0 && assistUnit === 0) {
-          alert('付添い時間を入力してください。');
-          return;
-        }
-
         let assistFare = (nurseCount * 3000 + helperCount * 1250) * (assistUnit * 2);
         if (isNight) assistFare = Math.round(assistFare * 1.2);
         fare += assistFare;
         breakdown.push(`付添い：¥${assistFare}`);
-        breakdown.push(`付添い時間：${assistUnit * 60}分`);
 
         if (document.querySelector('input[name="stairsSupport"]:checked').value === 'yes') {
           if (nurseCount + helperCount === 0) {
@@ -182,7 +176,8 @@
         }
 
         document.getElementById("result").textContent = `合計運賃：¥${fare.toLocaleString()}（${isNight ? '深夜' : '通常'}）`;
-        document.getElementById("
+        document.getElementById("details").innerHTML = `距離：${distanceKm.toFixed(2)} km`;
+        document.getElementById("breakdown").innerHTML = `<ul><li>車種：${vehicleType}</li>` + breakdown.map(item => `<li>${item}</li>`).join('') + `</ul>`;
       });
     }
 
