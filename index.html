@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>福祉タクシー利用料</title>
   <style>
-    /* 全体をUD明朝に */
     body {
       font-family: "UD明朝", serif;
       padding: 20px;
       max-width: 600px;
       margin: auto;
     }
-    /* フォーム部品やボタンにもUD明朝を継承 */
     input, select, button, textarea {
       font-family: inherit;
       width: 100%;
@@ -73,8 +71,9 @@
     }
     .invoice-table th, .invoice-table td {
       border: 1px solid #000;
-      padding: 2px;
-      line-height: 1.2;
+      padding: 1px 4px;
+      font-size: 10px;
+      line-height: 1.1;
       font-family: inherit;
     }
   </style>
@@ -203,8 +202,14 @@
       const useOwn = document.getElementById('useOwnWheelchair').checked;
       const loanWheelchair = document.querySelector('input[name="wheelchair"]:checked').value === 'yes';
       const stretcherUse = document.querySelector('input[name="stretcher"]:checked').value === 'yes';
+
+      if (useOwn && stretcherUse) {
+        alert('「ご自分の車椅子を使用」の場合はストレッチャー利用は「なし」を選択してください。');
+        return;
+      }
+
       if ((useOwn || loanWheelchair || stretcherUse) && vehicleType !== '大型ワンボックス') {
-        alert('車椅子をご利用の場合はワンボックス型をお選びください。');
+        alert('車椅子又はストレッチャーをご利用の場合はワンボックス型をお選びください。');
         return;
       }
 
